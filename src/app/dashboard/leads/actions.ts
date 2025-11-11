@@ -8,7 +8,7 @@ export async function updateLeadStatusAction(formData: FormData) {
   const nextStatus = formData.get('status')?.toString();
 
   if (!leadId || !nextStatus) {
-    return { error: 'Missing lead id or status' };
+    return;
   }
 
   const supabase = createSupabaseServiceRoleClient();
@@ -17,9 +17,8 @@ export async function updateLeadStatusAction(formData: FormData) {
 
   if (error) {
     console.error('Failed to update lead status', error);
-    return { error: 'Unable to update status' };
+    return;
   }
 
   revalidatePath('/dashboard/leads');
-  return { success: true };
 }

@@ -72,7 +72,7 @@ export async function uploadKnowledgeFileAction(
     }
   } catch (error) {
     console.error('Failed to ensure Gemini store', error);
-    return { error: 'Unable to set up Gemini File Search store.' };
+    return { error: (error as Error).message ?? 'Unable to set up Gemini File Search store.' };
   }
 
   const { error: insertError, data: kbRecord } = await serviceClient
@@ -114,6 +114,6 @@ export async function uploadKnowledgeFileAction(
       .from('kb_files')
       .update({ status: 'failed', error_message: (error as Error).message })
       .eq('id', kbRecord.id);
-    return { error: 'Upload failed. Check the file format and try again.' };
+    return { error: (error as Error).message ?? 'Upload failed. Check the file format and try again.' };
   }
 }

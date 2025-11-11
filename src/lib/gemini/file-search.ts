@@ -25,23 +25,34 @@ export const ensureFileSearchStore = async (botId: string, existingStore?: strin
     return existingStore;
   }
 
+  const sanitizedId = `bot_${botId.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+  const url = `${API_ROOT}/${location}/fileSearchStores?key=${apiKey}&file_search_store_id=${encodeURIComponent(
+    sanitizedId
+  )}`;
+
   const body = JSON.stringify({
     config: {
       display_name: `bot-${botId}`,
     },
   });
 
-  const sanitizedId = `bot_${botId.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
-  const store = await fetchJson(
-    `${API_ROOT}/${location}/fileSearchStores?key=${apiKey}&file_search_store_id=${encodeURIComponent(sanitizedId)}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body,
-    }
-  );
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  });
 
-  return store.name as string;
+  if (res.ok) {
+    const data = await res.json();
+    return data.name as string;
+  }
+
+  const errorText = await res.text();
+  if (res.status === 409 || errorText.includes('ALREADY_EXISTS')) {
+    return `${location}/fileSearchStores/${sanitizedId}`;
+  }
+
+  throw new Error(`Gemini File Search store error: ${errorText}`);
 };
 
 export const uploadDocumentToStore = async (opts: {

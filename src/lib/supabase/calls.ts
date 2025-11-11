@@ -34,9 +34,7 @@ type DbCall = {
   intent: string | null;
   urgency: string | null;
   started_at: string;
-  bots: {
-    name: string | null;
-  } | null;
+  bots: { name: string | null }[] | null;
 };
 
 /**
@@ -75,7 +73,7 @@ export const listRecentCalls = async (
   return (data as DbCall[]).map((call) => ({
     id: call.id,
     botId: call.bot_id,
-    botName: call.bots?.name ?? null,
+    botName: call.bots?.[0]?.name ?? null,
     fromNumber: call.from_number,
     toNumber: call.to_number,
     forwardedFrom: call.forwarded_from,
@@ -130,7 +128,7 @@ export const getCallDetail = async (
   return {
     id: call.id,
     botId: call.bot_id,
-    botName: call.bots?.name ?? null,
+    botName: call.bots?.[0]?.name ?? null,
     fromNumber: call.from_number,
     toNumber: call.to_number,
     forwardedFrom: call.forwarded_from,

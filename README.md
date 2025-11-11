@@ -1,36 +1,103 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Overview
 
-## Getting Started
+Vercel-hosted Next.js app that will power the “one-number AI receptionist” MVP. The frontend dashboard lives in the App Router while backend responsibilities (Twilio webhooks, Supabase writes, Gemini orchestration) run through Express-based API routes.
 
-First, run the development server:
+## Prerequisites
+
+- Node.js 20+
+- npm 10+
+- Supabase project (Postgres + Auth + Storage)
+- Twilio account/number
+- Gemini API key
+
+## Environment
+
+Copy the example file and fill in keys from Supabase/Twilio/Gemini:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.local.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Variable | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Browser client for RLS-protected dashboard queries. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Used by Express handlers for Twilio + Gemini operations (never expose to client). |
+| `SUPABASE_DB_URL` | Optional connection string for local scripts/migrations. |
+| `GEMINI_API_KEY` / `GEMINI_FILE_SEARCH_LOCATION` | Gemini 2.5 Flash + File Search operations. |
+| `TWILIO_*` | Voice webhook configuration + originating number. |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Database Schema
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+All tables, triggers, and RLS policies live under `supabase/migrations/0001_init.sql`. To apply them to a Supabase instance:
 
-## Learn More
+```bash
+supabase db push  # or psql "$SUPABASE_DB_URL" -f supabase/migrations/0001_init.sql
+```
 
-To learn more about Next.js, take a look at the following resources:
+Core objects:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `bots`, `bot_members` — bot metadata + membership/roles.
+- `calls`, `call_transcripts`, `call_summaries` — Twilio call lifecycle + AI summaries.
+- `leads` — structured lead info extracted per call.
+- `kb_files` — uploaded KB files linked to Gemini File Search.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Row-Level Security is enabled everywhere. Dashboard traffic uses Supabase Auth (respecting policies) while the Express backend uses the Service Role key for privileged operations (e.g., Twilio webhooks).
 
-## Deploy on Vercel
+### Seeding baseline data
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+After running the migration, you can seed an owner user + demo bot:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Add the following to `.env.local` (or export before running):
+   - `SEED_OWNER_EMAIL`
+   - `SEED_OWNER_PASSWORD`
+   - `SEED_OWNER_NAME`
+   - `SEED_BOT_NAME`
+   - `SEED_BOT_FORWARDING_NUMBER`
+2. Run `npm run seed`.
+
+The script will:
+- Create (or fetch) a Supabase Auth user using the service role key.
+- Insert a demo bot with the provided forwarding number.
+- Link the user to the bot as `owner`.
+
+You can then sign in to the dashboard using the seeded email/password.
+
+## Supabase Clients
+
+`src/lib/supabase/clients.ts` provides:
+
+- `createSupabaseBrowserClient()` → use inside client components/hooks.
+- `createSupabaseServerComponentClient()` → server components/actions bound to the caller’s session (RLS aware).
+- `createSupabaseServiceRoleClient()` → only for trusted server-side handlers (Twilio/Gemini API routes, KB ingestion, seed scripts).
+
+Both helpers assert that required environment variables are present so misconfiguration is caught early.
+
+## Authentication flow
+
+- Sign-ups are disabled; create users manually via Supabase Auth UI or the seed script.
+- `middleware.ts` guards every `/dashboard/*` route and redirects unauthenticated visitors to `/login`.
+- `/login` is a simple password form backed by a server action that calls `supabase.auth.signInWithPassword`. Successful logins redirect to `/dashboard/calls`.
+
+## Local Development
+
+```bash
+npm install
+npm run dev
+```
+
+Visit [http://localhost:3000](http://localhost:3000).
+
+## Twilio Webhooks on Vercel
+
+- Voice webhook: `POST /api/twilio/voice`
+- Gather action: `POST /api/twilio/voice/gather`
+- Status callback: `POST /api/twilio/voice/status`
+
+When running locally, expose your dev server via `ngrok http 3000` and point Twilio to the ngrok URLs. In production (Vercel), these routes are deployed automatically as serverless functions.
+
+## Deployment
+
+1. Create a Vercel project and import this repo.
+2. Add the environment variables from `.env.local` to Vercel.
+3. Link the project to your Supabase instance (service role key stays server-side only).
+4. Point your Twilio webhook to the deployed `/api/twilio/voice` endpoint once it exists.

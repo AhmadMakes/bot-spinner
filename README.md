@@ -72,6 +72,13 @@ You can then sign in to the dashboard using the seeded email/password.
 
 Both helpers assert that required environment variables are present so misconfiguration is caught early.
 
+## Knowledge Base uploads
+
+- Visit `/dashboard/bots` to view each bot and its associated documents.
+- Uploads store the file in the Supabase bucket defined by `SUPABASE_KB_BUCKET` and insert a row into `kb_files`.
+- Each bot gets a dedicated Gemini File Search store (created automatically if needed). Files are ingested via the [`uploadToFileSearchStore`](https://ai.google.dev/api/file-search/file-search-stores#method:-media.uploadtofilesearchstore) API described in `gemini-file-search-doc.md`.
+- File status moves from `processing` → `ready` (or `failed`, with error surfaced in the UI).
+
 ## Authentication flow
 
 - Sign-ups are disabled; create users manually via Supabase Auth UI or the seed script.

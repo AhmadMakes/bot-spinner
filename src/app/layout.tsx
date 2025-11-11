@@ -48,6 +48,12 @@ export default async function RootLayout({
                   Overview
                 </Link>
                 <Link
+                  href="/dashboard/bots"
+                  className="underline-offset-4 hover:text-white hover:underline"
+                >
+                  Bots
+                </Link>
+                <Link
                   href="/dashboard/calls"
                   className="underline-offset-4 hover:text-white hover:underline"
                 >

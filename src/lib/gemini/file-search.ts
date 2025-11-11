@@ -37,7 +37,7 @@ export const ensureFileSearchStore = async (botId: string, existingStore?: strin
 
 export const uploadDocumentToStore = async (opts: {
   storeName: string;
-  buffer: Buffer;
+  buffer: ArrayBuffer;
   filename: string;
   mimeType: string | null;
 }) => {

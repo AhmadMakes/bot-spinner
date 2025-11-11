@@ -1,9 +1,14 @@
 const API_ROOT = 'https://generativelanguage.googleapis.com/v1beta';
 
 const apiKey = process.env.GEMINI_API_KEY;
+const location = process.env.GEMINI_FILE_SEARCH_LOCATION;
 
 if (!apiKey) {
   throw new Error('Missing GEMINI_API_KEY');
+}
+
+if (!location) {
+  throw new Error('Missing GEMINI_FILE_SEARCH_LOCATION');
 }
 
 const fetchJson = async (url: string, init?: RequestInit) => {
@@ -26,11 +31,15 @@ export const ensureFileSearchStore = async (botId: string, existingStore?: strin
     },
   });
 
-  const store = await fetchJson(`${API_ROOT}/fileSearchStores?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body,
-  });
+  const sanitizedId = `bot_${botId.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+  const store = await fetchJson(
+    `${API_ROOT}/${location}/fileSearchStores?key=${apiKey}&file_search_store_id=${encodeURIComponent(sanitizedId)}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+    }
+  );
 
   return store.name as string;
 };

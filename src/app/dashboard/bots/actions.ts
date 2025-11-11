@@ -52,7 +52,8 @@ export async function uploadKnowledgeFileAction(
     return { error: 'You do not have access to this bot.' };
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer());
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
   const storagePath = `${botId}/${Date.now()}-${file.name}`;
 
   const serviceClient = createSupabaseServiceRoleClient();
@@ -95,7 +96,7 @@ export async function uploadKnowledgeFileAction(
     await uploadToKnowledgeBucket(buffer, storagePath, file.type || 'application/octet-stream');
     const geminiFileId = await uploadDocumentToStore({
       storeName: botStore!,
-      buffer,
+      buffer: arrayBuffer,
       filename: file.name,
       mimeType: file.type,
     });

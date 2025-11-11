@@ -20,16 +20,17 @@ export const metadata: Metadata = {
     "Route multiple businesses through one Twilio number, capture transcripts, and turn every call into leads.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const hasSession =
     cookieStore.get("sb-access-token") ||
     cookieStore.get("supabase-auth-token") ||
-    cookieStore.get(`sb-${process.env.NEXT_PUBLIC_SUPABASE_URL?.split("//")[1]}-auth-token`);
+    (process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      cookieStore.get(`sb-${process.env.NEXT_PUBLIC_SUPABASE_URL.split("//")[1]}-auth-token`));
 
   return (
     <html lang="en">

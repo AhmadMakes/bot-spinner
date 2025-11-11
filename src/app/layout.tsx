@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -19,18 +20,17 @@ export const metadata: Metadata = {
     "Route multiple businesses through one Twilio number, capture transcripts, and turn every call into leads.",
 };
 
-const navLinks = [
-  { href: "/", label: "Overview" },
-  { href: "/dashboard/calls", label: "Calls" },
-  { href: "/dashboard/leads", label: "Leads" },
-  { href: "/login", label: "Login" },
-];
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = cookies();
+  const hasSession =
+    cookieStore.get("sb-access-token") ||
+    cookieStore.get("supabase-auth-token") ||
+    cookieStore.get(`sb-${process.env.NEXT_PUBLIC_SUPABASE_URL?.split("//")[1]}-auth-token`);
+
   return (
     <html lang="en">
       <body
@@ -42,16 +42,39 @@ export default function RootLayout({
               <Link href="/" className="font-semibold tracking-wide text-lg text-emerald-300">
                 Bot Spinner
               </Link>
-              <nav className="flex flex-wrap gap-4 text-sm text-slate-300">
-                {navLinks.map((link) => (
+              <nav className="flex flex-wrap items-center gap-4 text-sm text-slate-300">
+                <Link href="/" className="underline-offset-4 hover:text-white hover:underline">
+                  Overview
+                </Link>
+                <Link
+                  href="/dashboard/calls"
+                  className="underline-offset-4 hover:text-white hover:underline"
+                >
+                  Calls
+                </Link>
+                <Link
+                  href="/dashboard/leads"
+                  className="underline-offset-4 hover:text-white hover:underline"
+                >
+                  Leads
+                </Link>
+                {hasSession ? (
+                  <form action="/login/logout" className="inline">
+                    <button
+                      type="submit"
+                      className="rounded-full border border-white/30 px-4 py-1 text-xs font-semibold text-white transition hover:border-white/80"
+                    >
+                      Log out
+                    </button>
+                  </form>
+                ) : (
                   <Link
-                    key={link.href}
-                    href={link.href}
-                    className="underline-offset-4 hover:text-white hover:underline"
+                    href="/login"
+                    className="rounded-full border border-white/30 px-4 py-1 text-xs font-semibold text-white transition hover:border-white/80"
                   >
-                    {link.label}
+                    Log in
                   </Link>
-                ))}
+                )}
               </nav>
             </div>
           </header>

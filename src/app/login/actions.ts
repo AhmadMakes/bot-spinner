@@ -29,3 +29,9 @@ export async function signIn(prevState: SignInState, formData: FormData): Promis
 
   redirect(redirectTo);
 }
+
+export async function signOutAction() {
+  const supabase = await createSupabaseServerActionClient();
+  await supabase.auth.signOut();
+  redirect('/login');
+}

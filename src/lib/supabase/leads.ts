@@ -26,10 +26,7 @@ type DbLead = {
   next_step: string | null;
   status: string;
   created_at: string;
-  calls: {
-    started_at: string | null;
-    intent: string | null;
-  } | null;
+  calls: { started_at: string | null; intent: string | null }[] | null;
 };
 
 export const listLeads = async (
@@ -72,8 +69,8 @@ export const listLeads = async (
     nextStep: lead.next_step,
     status: lead.status,
     createdAt: lead.created_at,
-    callStartedAt: lead.calls?.started_at ?? null,
-    intent: lead.calls?.intent ?? null,
+    callStartedAt: lead.calls?.[0]?.started_at ?? null,
+    intent: lead.calls?.[0]?.intent ?? null,
   }));
 };
 

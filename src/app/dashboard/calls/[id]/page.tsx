@@ -3,10 +3,6 @@ import { notFound } from 'next/navigation';
 import { getCallDetail } from '@/lib/supabase/calls';
 import { createSupabaseServerComponentClient } from '@/lib/supabase/clients';
 
-type PageProps = {
-  params: { id: string };
-};
-
 const formatDateTime = (iso: string) =>
   new Intl.DateTimeFormat('en-US', {
     dateStyle: 'full',
@@ -26,8 +22,12 @@ const Section = ({
   </section>
 );
 
-export default async function CallDetailPage({ params }: PageProps) {
-  const { id } = params;
+export default async function CallDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
   const supabase = await createSupabaseServerComponentClient();
   const call = await getCallDetail(supabase, id);
 

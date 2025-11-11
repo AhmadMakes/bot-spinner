@@ -77,7 +77,7 @@ Both helpers assert that required environment variables are present so misconfig
 - Visit `/dashboard/bots` to view each bot and its associated documents.
 - Uploads store the file in the Supabase bucket defined by `SUPABASE_KB_BUCKET` and insert a row into `kb_files`.
 - Each bot gets a dedicated Gemini File Search store (created automatically if needed). Files are ingested via the [`uploadToFileSearchStore`](https://ai.google.dev/api/file-search/file-search-stores#method:-media.uploadtofilesearchstore) API described in `gemini-file-search-doc.md`.
-- File status moves from `processing` → `ready` (or `failed`, with error surfaced in the UI).
+- File status moves from `processing` → `ready` (or `failed`, with error surfaced in the UI). File uploads are limited to 4 MB to stay within serverless body size limits.
 
 ## Authentication flow
 

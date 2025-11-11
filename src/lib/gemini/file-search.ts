@@ -52,7 +52,7 @@ export const ensureFileSearchStore = async (botId: string, existingStore?: strin
     return `${location}/fileSearchStores/${sanitizedId}`;
   }
 
-  throw new Error(`Gemini File Search store error: ${errorText}`);
+  throw new Error(`Gemini File Search store error: status ${res.status} ${res.statusText} body=${errorText}`);
 };
 
 export const uploadDocumentToStore = async (opts: {
